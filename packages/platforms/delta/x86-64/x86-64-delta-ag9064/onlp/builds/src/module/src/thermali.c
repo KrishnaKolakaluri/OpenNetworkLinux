@@ -43,7 +43,6 @@
             return ONLP_STATUS_E_INVALID;       \
         }                                       \
     } while(0)
-		
 /* Static values */
 static onlp_thermal_info_t linfo[] = {
     { }, /* Not used */
@@ -86,42 +85,41 @@ int onlp_thermali_init(void)
 
 int onlp_thermali_info_get(onlp_oid_t id, onlp_thermal_info_t* info)
 {
-    int rv          = ONLP_STATUS_OK;
-    int local_id    = 0;
-    int temps_base  = 1000;
-    uint32_t u4Data = 0;
+    int rv             = ONLP_STATUS_OK;
+    int local_id       = 0;
+    int temp_base      = 1000;
+    uint32_t temp_data = 0;
     
     VALIDATE(id);
     
     local_id = ONLP_OID_ID_GET(id);
-    
-    *info = linfo[local_id];	
+    *info = linfo[local_id];
     
     switch(local_id)
     {
         case THERMAL_CPU_CORE:
-            rv = onlp_i2c_read(I2C_BUS_2, THERMAL_CPU_ADDR, THERMAL_REGISTER, 1, (uint8_t*)&u4Data, 0);
+            rv = onlp_i2c_read(I2C_BUS_2, THERMAL_CPU_ADDR, THERMAL_REGISTER, 1, (uint8_t*)&temp_data, 0);
             break;
-            
-        case THERMAL_ON_FAN_BROAD:
-            rv = ifnOS_LINUX_BmcGetDataByName("Temp_5", &u4Data);
-            break;
-            
+
         case THERMAL_1_ON_MAIN_BOARD:
-            rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_3, THERMAL_1_ADDR, THERMAL_REGISTER, &u4Data, 1);
+            rv = ifnOS_LINUX_BmcGetDataByName("Temp_1", &temp_data);
             break;
             
         case THERMAL_2_ON_MAIN_BOARD:
-            rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_3, THERMAL_2_ADDR, THERMAL_REGISTER, &u4Data, 1);
+            rv = ifnOS_LINUX_BmcGetDataByName("Temp_2", &temp_data);
             break;
             
         case THERMAL_3_ON_MAIN_BOARD:
-            rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_3, THERMAL_3_ADDR, THERMAL_REGISTER, &u4Data, 1);
-            break;	
+            rv = ifnOS_LINUX_BmcGetDataByName("Temp_3", &temp_data);
+            break;
 
         case THERMAL_4_ON_MAIN_BOARD:
-            rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_3, THERMAL_4_ADDR, THERMAL_REGISTER, &u4Data, 1);
+            rv = ifnOS_LINUX_BmcGetDataByName("Temp_4", &temp_data);
             break; 
+            
+        case THERMAL_ON_FAN_BROAD:
+            rv = ifnOS_LINUX_BmcGetDataByName("Temp_5", &temp_data);
+            break;
             
         default:
             AIM_LOG_ERROR("Invalid Thermal ID!!\n");
@@ -130,7 +128,7 @@ int onlp_thermali_info_get(onlp_oid_t id, onlp_thermal_info_t* info)
     
     if(rv == ONLP_STATUS_OK)
     {
-        info->mcelsius = u4Data * temps_base;
+        info->mcelsius = temp_data * temp_base;
     }
     
     return rv;

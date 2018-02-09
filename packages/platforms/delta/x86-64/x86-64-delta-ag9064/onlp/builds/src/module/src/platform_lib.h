@@ -27,80 +27,85 @@
 
 #include "x86_64_delta_ag9064_log.h"
 
-#define OS_MAX_MSG_SIZE 100
-
-#define I2C_BMC_BUS_1           0x00
-#define I2C_BMC_BUS_3           0x02
-#define I2C_BMC_BUS_5           0x04
-#define I2C_BUS_1               0x00
-#define I2C_BUS_2               0x01
-#define I2C_BUS_3               0x02
-
-#define SWPLD_1_ADDR            0x35
-#define SWPLD_2_ADDR            0x34
-#define SWPLD_3_ADDR            0x33
-#define SWPLD_4_ADDR            0x32
-
-#define IDPROM_PATH             "/sys/class/i2c-adapter/i2c-0/0-0056/eeprom"
-
+#define IDPROM_PATH                     "/sys/class/i2c-adapter/i2c-0/0-0056/eeprom"
+                                       
+#define I2C_BMC_BUS_1                   0x00
+#define I2C_BMC_BUS_3                   0x02
+#define I2C_BMC_BUS_5                   0x04
+#define I2C_BUS_1                       0x00
+#define I2C_BUS_2                       0x01
+#define I2C_BUS_3                       0x02
+                                        
+#define SWPLD_1_ADDR                    0x35
+#define SWPLD_2_ADDR                    0x34
+#define SWPLD_3_ADDR                    0x33
+#define SWPLD_4_ADDR                    0x32
+                                        
 #define NUM_OF_THERMAL_ON_MAIN_BROAD    6
 #define NUM_OF_LED_ON_MAIN_BROAD        8
 #define NUM_OF_PSU_ON_MAIN_BROAD        2
 #define NUM_OF_FAN_ON_MAIN_BROAD        8
 #define NUM_OF_FAN_ON_PSU_BROAD         2
 #define NUM_OF_FAN                      NUM_OF_FAN_ON_MAIN_BROAD + NUM_OF_FAN_ON_PSU_BROAD
+                                       
+#define CPLD_VERSION_REGISTER           0x00
+#define CPLD_VERSION_OFFSET             4
+                                        
+#define LED_FAN_SYS_FRONT_REGISTER      0x02
+#define LED_FAN_TRAY_REGISTER           0x1B
+#define LED_FAN_FRONT_BIT               0x06
+#define LED_SYS_FRONT_BIT               0x04
+#define LED_FAN_TRAY_1_BIT              0x07
+#define LED_FAN_TRAY_2_BIT              0x06
+#define LED_FAN_TRAY_3_BIT              0x05
+#define LED_FAN_TRAY_4_BIT              0x04
+                                        
+#define PSU_STATUS_REGISTER             0x02
+#define PSU1_PRESENT_BIT                0x07
+#define PSU1_POWER_GOOD_BIT             0x06
+#define PSU1_INT_BIT                    0x05
+#define PSU2_PRESENT_BIT                0x03
+#define PSU2_POWER_GOOD_BIT             0x02
+#define PSU2_INT_BIT                    0x01
+#define PSU_INT_HAPPEN_STATUS           0x01
+#define PSU_POWER_GOOD_STATUS           0x00
+#define PSU_PRESENT_STATUS              0x00
+                                        
+#define FAN_SPEED_PMBUS                 0x90
+#define FAN_ON_PSU1_ADDR                0x58
+#define FAN_ON_PSU2_ADDR                0x59
+                                        
+#define THERMAL_CPU_ADDR                0x4D
+#define THERMAL_FAN_ADDR                0x4F
+#define THERMAL_1_ADDR                  0x4C
+#define THERMAL_2_ADDR                  0x4E
+#define THERMAL_3_ADDR                  0x4B
+#define THERMAL_4_ADDR                  0x4A
+#define THERMAL_REGISTER                0x00
+                                        
+#define QSFP_MIN_PORT                   1
+#define QSFP_MAX_PORT                   64
+                                        
+#define PCA9548_I2C_MUX_ADDR            0x70
+#define QSFP_CHAN_ON_PCA9548            0x04
+#define QSFP_PORT_MUX_REG               0x13
+#define QSFP_EEPROM_ADDR                0x50
+                                        
+#define QSFP_1_TO_8_PRESENT_REG         0x03
+#define QSFP_9_TO_16_PRESENT_REG        0x03
+#define QSFP_17_TO_24_PRESENT_REG       0x24
+#define QSFP_25_TO_32_PRESENT_REG       0x24
+#define QSFP_33_TO_40_PRESENT_REG       0x04
+#define QSFP_41_TO_48_PRESENT_REG       0x04
+#define QSFP_49_TO_56_PRESENT_REG       0x25
+#define QSFP_57_TO_64_PRESENT_REG       0x25
+                                        
+#define OS_MAX_MSG_SIZE                 100
 
-#define CPLD_VERSION_REGISTER   0x00
-#define CPLD_VERSION_OFFSET     4
+#define INVALID_ADDR                    0xFF
+#define INVALID_REG                     0xFF
+#define INVALID_REG_BIT                 0xFF
 
-#define LED_FRONT_PANEL_REGISTER 0x02
-#define LED_FAN_TRAY_REGISTER    0x1B
-
-    
-#define PSU_STATUS_REGISTER      0x02
-#define PSU_POWER_GOOD_STATUS    0x00
-#define PSU_PRESENT_STATUS       0x00
-#define PSU1_PRESENT_BIT         0x07
-#define PSU1_OUTPUT_STATUS_BIT   0x06
-#define PSU2_PRESENT_BIT         0x03
-#define PSU2_OUTPUT_STATUS_BIT   0x02
-
-#define PMBUS_FAN_SPEED          0x90
-#define FAN_ON_PSU1_ADDR         0x58
-#define FAN_ON_PSU2_ADDR         0x59
-
-#define QSFP_MIN_PORT       1
-#define QSFP_MAX_PORT       64
-
-#define PCA9548_I2C_MUX_ADDR        0x70
-#define QSFP_CHAN_ON_PCA9548        0x04
-#define QSFP_PORT_MUX_REG           0x13
-#define QSFP_EEPROM_ADDR            0x50
-
-#define QSFP_1_TO_8_PRESENT_REG     0x03
-#define QSFP_9_TO_16_PRESENT_REG    0x03
-#define QSFP_17_TO_24_PRESENT_REG   0x24
-#define QSFP_25_TO_32_PRESENT_REG   0x24
-#define QSFP_33_TO_40_PRESENT_REG   0x04
-#define QSFP_41_TO_48_PRESENT_REG   0x04
-#define QSFP_49_TO_56_PRESENT_REG   0x25
-#define QSFP_57_TO_64_PRESENT_REG   0x25
-
-#define THERMAL_CPU_ADDR	0x4D
-#define THERMAL_FAN_ADDR	0x4F
-#define THERMAL_1_ADDR		0x4C
-#define THERMAL_2_ADDR		0x4E
-#define THERMAL_3_ADDR		0x4B
-#define THERMAL_4_ADDR		0x4A
-#define THERMAL_REGISTER	0x00
-
-#define INVALID_ADDR        0xFF
-#define INVALID_REG         0xFF
-#define INVALID_REG_BIT     0xFF
-    
-/* 
-LED related data
- */
 enum onlp_led_id
 {
     LED_RESERVED = 0,
@@ -112,19 +117,6 @@ enum onlp_led_id
     LED_FAN_TRAY_2,
     LED_FAN_TRAY_3,
     LED_FAN_TRAY_4
-};
-
-enum led_light_mode 
-{
-	LED_MODE_OFF = 0,
-    LED_MODE_GREEN = 1,
-    LED_MODE_FAN_TRAY_GREEN = 1,
-    LED_MODE_PSU_RED = 2,
-    LED_MODE_FAN_RED = 2,
-    LED_MODE_SYS_RED = 3,
-    LED_MODE_FAN_TRAY_AMBER = 0,
-	LED_MODE_GREEN_BLINK = 2,
-	LED_MODE_UNKNOWN
 };
 
 enum onlp_fan_id
@@ -158,7 +150,18 @@ enum onlp_thermal_id
     THERMAL_2_ON_MAIN_BOARD,
     THERMAL_3_ON_MAIN_BOARD,
     THERMAL_4_ON_MAIN_BOARD,
-    THERMAL_5_ON_MAIN_BOARD,
+};
+
+enum led_light_mode 
+{
+    LED_MODE_OFF = 0,
+    LED_MODE_GREEN = 1,
+    LED_MODE_RED = 2,
+    LED_MODE_FAN_TRAY_GREEN = 1,
+    LED_MODE_SYS_RED = 3,
+    LED_MODE_FAN_TRAY_AMBER = 0,
+    LED_MODE_GREEN_BLINK = 2,
+    LED_MODE_UNKNOWN
 };
 
 int ifnOS_LINUX_BmcI2CGet(uint8_t bus, uint8_t dev, uint32_t addr, uint32_t *data, uint8_t datalen);

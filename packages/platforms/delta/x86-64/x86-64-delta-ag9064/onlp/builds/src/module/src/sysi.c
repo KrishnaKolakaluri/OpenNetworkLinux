@@ -20,9 +20,10 @@
  * </bsn.cl>
  ************************************************************
  *
- *
+ * HardwareVersion: 02
  *
  ***********************************************************/
+ 
 #include <onlp/platformi/sysi.h>
 #include <onlplib/crc32.h>
 #include <onlplib/file.h>
@@ -66,7 +67,7 @@ int onlp_sysi_onie_data_get(uint8_t** data, int* size)
 
 int onlp_sysi_platform_info_get(onlp_platform_info_t* pi)
 {
-    int rv      = ONLP_STATUS_OK;
+    int rv = ONLP_STATUS_OK;
     uint32_t u4Data = 0;
     
     rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_5, SWPLD_1_ADDR, CPLD_VERSION_REGISTER, &u4Data, 1);
@@ -119,14 +120,14 @@ int onlp_sysi_oids_get(onlp_oid_t* table, int max)
 int onlp_sysi_platform_manage_leds(void)
 { 
     int i = 0, rc = ONLP_STATUS_OK;
-	onlp_fan_info_t fan_info;
-	onlp_led_mode_t fan_new_mode;
+    onlp_fan_info_t fan_info;
+    onlp_led_mode_t fan_new_mode;
     onlp_led_mode_t fan_tray_new_mode[NUM_OF_FAN_ON_MAIN_BROAD];
-	onlp_psu_info_t psu_info[NUM_OF_PSU_ON_MAIN_BROAD];
-	onlp_led_mode_t psu_new_mode[NUM_OF_PSU_ON_MAIN_BROAD];
-	onlp_led_mode_t sys_new_mode;
+    onlp_psu_info_t psu_info[NUM_OF_PSU_ON_MAIN_BROAD];
+    onlp_led_mode_t psu_new_mode[NUM_OF_PSU_ON_MAIN_BROAD];
+    onlp_led_mode_t sys_new_mode;
 
-	/* FAN LED */
+    /* FAN LED */
     for(i = 0; i < NUM_OF_FAN_ON_MAIN_BROAD; i++)
     {
         rc = onlp_fani_info_get(ONLP_FAN_ID_CREATE(i+1), &fan_info);
@@ -163,10 +164,9 @@ int onlp_sysi_platform_manage_leds(void)
         fan_new_mode = ONLP_LED_MODE_ORANGE;
     }
     
-	onlp_ledi_mode_set(ONLP_LED_ID_CREATE(LED_FAN), fan_new_mode);
+    onlp_ledi_mode_set(ONLP_LED_ID_CREATE(LED_FAN), fan_new_mode);
 
-
-	/* PSU1 and PSU2 LED */
+    /* PSU1 and PSU2 LED */
     for( i = 0; i < NUM_OF_PSU_ON_MAIN_BROAD; i++)
     {
         rc = onlp_psui_info_get(ONLP_PSU_ID_CREATE(i+1), &psu_info[i]);
@@ -176,7 +176,7 @@ int onlp_sysi_platform_manage_leds(void)
            psu_new_mode[i] = ONLP_LED_MODE_OFF;
            continue;
         }
-        
+    
         if(psu_info[i].status & ONLP_PSU_STATUS_PRESENT)
         {
             if(psu_info[i].status & ONLP_PSU_STATUS_FAILED)
@@ -192,23 +192,23 @@ int onlp_sysi_platform_manage_leds(void)
         {
             psu_new_mode[i] = ONLP_LED_MODE_OFF;
         }
-    }    
-         
-	onlp_ledi_mode_set(ONLP_LED_ID_CREATE(LED_PSU1), psu_new_mode[0]);
+    }
+
+    onlp_ledi_mode_set(ONLP_LED_ID_CREATE(LED_PSU1), psu_new_mode[0]);
     onlp_ledi_mode_set(ONLP_LED_ID_CREATE(LED_PSU2), psu_new_mode[1]);
-    
-	/* SYS LED */
-	if( ((psu_new_mode[0] == ONLP_LED_MODE_GREEN) || (psu_new_mode[1] == ONLP_LED_MODE_GREEN)) &&
+
+    /* SYS LED */
+    if( ((psu_new_mode[0] == ONLP_LED_MODE_GREEN) || (psu_new_mode[1] == ONLP_LED_MODE_GREEN)) &&
         (fan_new_mode == ONLP_LED_MODE_GREEN))
     {
-		sys_new_mode = ONLP_LED_MODE_GREEN;
+        sys_new_mode = ONLP_LED_MODE_GREEN;
     }
-	else
+    else
     {
-		sys_new_mode = ONLP_LED_MODE_RED;
-	}
-    
-	onlp_ledi_mode_set(ONLP_LED_ID_CREATE(LED_SYS), sys_new_mode);
-
-	return ONLP_STATUS_OK;
+        sys_new_mode = ONLP_LED_MODE_RED;
+    }
+        
+    onlp_ledi_mode_set(ONLP_LED_ID_CREATE(LED_SYS), sys_new_mode);
+        
+    return ONLP_STATUS_OK;
 }

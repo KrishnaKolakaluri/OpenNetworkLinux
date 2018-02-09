@@ -42,17 +42,17 @@
             return ONLP_STATUS_E_INVALID;       \
         }                                       \
     } while(0)
-		
+
 /* Static values */
 static onlp_fan_info_t linfo[] = 
 {
-	{ }, /* Not used */
-	{ 
+    { }, /* Not used */
+    { 
         { ONLP_FAN_ID_CREATE(FAN_1_ON_FAN_BOARD), "Chassis Fan 4 front", 0},
         ONLP_FAN_STATUS_PRESENT,
         ONLP_FAN_CAPS_GET_RPM | ONLP_FAN_CAPS_GET_PERCENTAGE, 0, 0, ONLP_FAN_MODE_INVALID,
     },
-	{ 
+    {
         { ONLP_FAN_ID_CREATE(FAN_2_ON_FAN_BOARD), "Chassis Fan 3 front", 0},
         ONLP_FAN_STATUS_PRESENT,
         ONLP_FAN_CAPS_GET_RPM | ONLP_FAN_CAPS_GET_PERCENTAGE, 0, 0, ONLP_FAN_MODE_INVALID,
@@ -72,7 +72,7 @@ static onlp_fan_info_t linfo[] =
         ONLP_FAN_STATUS_PRESENT,
         ONLP_FAN_CAPS_GET_RPM | ONLP_FAN_CAPS_GET_PERCENTAGE, 0, 0, ONLP_FAN_MODE_INVALID,
     },
-	{ 
+    {
         { ONLP_FAN_ID_CREATE(FAN_7_ON_FAN_BOARD), "Chassis Fan 3 rear", 0},
         ONLP_FAN_STATUS_PRESENT,
         ONLP_FAN_CAPS_GET_RPM | ONLP_FAN_CAPS_GET_PERCENTAGE, 0, 0, ONLP_FAN_MODE_INVALID,
@@ -198,11 +198,11 @@ static int dni_fani_info_get_on_psu(int local_id, onlp_fan_info_t* info)
     switch(local_id)
     {
         case FAN_ON_PSU1:
-            rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_1, FAN_ON_PSU1_ADDR, PMBUS_FAN_SPEED, &FanSpeed, 2);
+            rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_1, FAN_ON_PSU1_ADDR, FAN_SPEED_PMBUS, &FanSpeed, 2);
             break;
             
         case FAN_ON_PSU2:
-            rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_1, FAN_ON_PSU2_ADDR, PMBUS_FAN_SPEED, &FanSpeed, 2);
+            rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_1, FAN_ON_PSU2_ADDR, FAN_SPEED_PMBUS, &FanSpeed, 2);
             break;
                 
         default:
@@ -229,8 +229,7 @@ int onlp_fani_info_get(onlp_oid_t id, onlp_fan_info_t* info)
     VALIDATE(id);
     
     local_id = ONLP_OID_ID_GET(id);
-    
-    *info = linfo[ONLP_OID_ID_GET(id)];	
+    *info = linfo[ONLP_OID_ID_GET(id)];
     
     switch(local_id)
     {

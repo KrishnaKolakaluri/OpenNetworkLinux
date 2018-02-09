@@ -75,8 +75,7 @@ int onlp_psui_info_get(onlp_oid_t id, onlp_psu_info_t* info)
     VALIDATE(id);
     
     local_id = ONLP_OID_ID_GET(id);
-    
-    *info = pinfo[local_id];	
+    *info = pinfo[local_id];
     
     rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_5, SWPLD_1_ADDR, PSU_STATUS_REGISTER, &PSUStatus, 1);
     
@@ -86,12 +85,12 @@ int onlp_psui_info_get(onlp_oid_t id, onlp_psu_info_t* info)
         {
             case PSU_1:
                 PSUIsPresent = PSUStatus >> PSU1_PRESENT_BIT;
-                PSUIsGood = (PSUStatus >> PSU1_OUTPUT_STATUS_BIT) & 0x01;
+                PSUIsGood = (PSUStatus >> PSU1_POWER_GOOD_BIT) & 0x01;
                 break;
             
             case PSU_2:
                 PSUIsPresent = (PSUStatus >> PSU2_PRESENT_BIT) & 0x01;
-                PSUIsGood = (PSUStatus >> PSU2_OUTPUT_STATUS_BIT) & 0x01;
+                PSUIsGood = (PSUStatus >> PSU2_POWER_GOOD_BIT) & 0x01;
                 break;
             
             default:
@@ -119,7 +118,7 @@ int onlp_psui_info_get(onlp_oid_t id, onlp_psu_info_t* info)
         AIM_LOG_ERROR("Unable to read PSU present status: %d\r\n", rv);
         return ONLP_STATUS_E_INVALID;
     }
-            
+        
     return rv;
 }
 
