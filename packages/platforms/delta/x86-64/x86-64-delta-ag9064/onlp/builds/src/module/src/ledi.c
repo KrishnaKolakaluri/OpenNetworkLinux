@@ -56,17 +56,17 @@ led_light_mode_map_t led_map[] =
 {
     {LED_FAN,  LED_MODE_OFF,         ONLP_LED_MODE_OFF},
     {LED_FAN,  LED_MODE_GREEN,       ONLP_LED_MODE_GREEN},
-    {LED_FAN,  LED_MODE_FAN_RED,     ONLP_LED_MODE_RED},
+    {LED_FAN,  LED_MODE_RED,         ONLP_LED_MODE_RED},
     {LED_SYS,  LED_MODE_OFF,         ONLP_LED_MODE_OFF},
     {LED_SYS,  LED_MODE_GREEN,       ONLP_LED_MODE_GREEN},
     {LED_SYS,  LED_MODE_GREEN_BLINK, ONLP_LED_MODE_GREEN_BLINKING},
     {LED_SYS,  LED_MODE_SYS_RED,     ONLP_LED_MODE_RED},
     {LED_PSU2, LED_MODE_OFF,         ONLP_LED_MODE_OFF},
     {LED_PSU2, LED_MODE_GREEN,       ONLP_LED_MODE_GREEN},
-    {LED_PSU2, LED_MODE_PSU_RED,     ONLP_LED_MODE_RED},
+    {LED_PSU2, LED_MODE_RED,         ONLP_LED_MODE_RED},
     {LED_PSU1, LED_MODE_OFF,         ONLP_LED_MODE_OFF},
     {LED_PSU1, LED_MODE_GREEN,       ONLP_LED_MODE_GREEN},
-    {LED_PSU1, LED_MODE_PSU_RED,     ONLP_LED_MODE_RED},
+    {LED_PSU1, LED_MODE_RED,         ONLP_LED_MODE_RED},
     {LED_FAN_TRAY_1, LED_MODE_FAN_TRAY_AMBER, ONLP_LED_MODE_ORANGE},
     {LED_FAN_TRAY_1, LED_MODE_FAN_TRAY_GREEN, ONLP_LED_MODE_GREEN},
     {LED_FAN_TRAY_2, LED_MODE_FAN_TRAY_AMBER, ONLP_LED_MODE_ORANGE},
@@ -91,14 +91,14 @@ static onlp_led_info_t linfo[] =
         ONLP_LED_CAPS_ON_OFF | ONLP_LED_CAPS_GREEN | ONLP_LED_CAPS_GREEN_BLINKING | ONLP_LED_CAPS_RED,
     },
     {
-        { ONLP_LED_ID_CREATE(LED_PSU2), "PSU2 LED (FRONT PANEL)", 0 },
-        ONLP_LED_STATUS_PRESENT,
-        ONLP_LED_CAPS_ON_OFF | ONLP_LED_CAPS_GREEN | ONLP_LED_CAPS_RED_BLINKING,
-    },
-    {
         { ONLP_LED_ID_CREATE(LED_PSU1), "PSU1 LED (FRONT PANEL)", 0 },
         ONLP_LED_STATUS_PRESENT,
-        ONLP_LED_CAPS_ON_OFF | ONLP_LED_CAPS_GREEN | ONLP_LED_CAPS_RED_BLINKING,
+        ONLP_LED_CAPS_ON_OFF | ONLP_LED_CAPS_GREEN | ONLP_LED_CAPS_RED,
+    },
+    {
+        { ONLP_LED_ID_CREATE(LED_PSU2), "PSU2 LED (FRONT PANEL)", 0 },
+        ONLP_LED_STATUS_PRESENT,
+        ONLP_LED_CAPS_ON_OFF | ONLP_LED_CAPS_GREEN | ONLP_LED_CAPS_RED,
     },
     {
         { ONLP_LED_ID_CREATE(LED_FAN_TRAY_1), "FAN TRAY 1", 0 },
@@ -159,57 +159,80 @@ int onlp_ledi_init(void)
 
 int onlp_ledi_info_get(onlp_oid_t id, onlp_led_info_t* info)
 {
-    int  rv		     = ONLP_STATUS_OK;
+    int  rv          = ONLP_STATUS_OK;
     int  local_id    = 0;
     uint32_t LedMode = 0;
             
     VALIDATE(id);
     
     local_id = ONLP_OID_ID_GET(id);
-    
-    *info = linfo[local_id];	
+    *info = linfo[local_id];
 
     /* Get LED mode */
     switch(local_id)
     {
         case LED_FAN:
-            rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_5, SWPLD_2_ADDR, LED_FRONT_PANEL_REGISTER, &LedMode, 1);
-            LedMode = ((LedMode >> 6) & 0x03);                                                           
-            break;   
+            rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_5, SWPLD_2_ADDR, LED_FAN_SYS_FRONT_REGISTER, &LedMode, 1);
+            LedMode = ((LedMode >> LED_FAN_FRONT_BIT) & 0x03);                                                           
+            break;
 
         case LED_SYS:
-            rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_5, SWPLD_2_ADDR, LED_FRONT_PANEL_REGISTER, &LedMode, 1);
-            LedMode = ((LedMode >> 4) & 0x03); 
-            break; 
-                                                                                                            
-        case LED_PSU2:                                                                                    
-            rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_5, SWPLD_2_ADDR, LED_FRONT_PANEL_REGISTER, &LedMode, 1);
-            LedMode = ((LedMode >> 2) & 0x03);                                                            
-            break;                                                                                          
+            rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_5, SWPLD_2_ADDR, LED_FAN_SYS_FRONT_REGISTER, &LedMode, 1);
+            LedMode = ((LedMode >> LED_SYS_FRONT_BIT) & 0x03); 
+            break;
                                                                                                             
         case LED_PSU1:                                                                                       
-            rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_5, SWPLD_2_ADDR, LED_FRONT_PANEL_REGISTER, &LedMode, 1);
-            LedMode = (LedMode & 0x03);
+            rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_5, SWPLD_1_ADDR, PSU_STATUS_REGISTER, &LedMode, 1);
+            
+            if ( ((LedMode >> PSU1_INT_BIT) & 0x01) == PSU_INT_HAPPEN_STATUS )
+            {
+                LedMode = LED_MODE_RED;
+            }
+            else if( ((LedMode >> PSU1_POWER_GOOD_BIT) & 0x01) == PSU_POWER_GOOD_STATUS )
+            {
+                LedMode = LED_MODE_GREEN;
+            }
+            else
+            {
+                LedMode = LED_MODE_OFF;
+            } 
             break;
-        
+            
+        case LED_PSU2:                                                                                    
+            rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_5, SWPLD_1_ADDR, PSU_STATUS_REGISTER, &LedMode, 1);
+            
+            if ( ((LedMode >> PSU2_INT_BIT) & 0x01) == PSU_INT_HAPPEN_STATUS )
+            {
+                LedMode = LED_MODE_RED;
+            }
+            else if( ((LedMode >> PSU2_POWER_GOOD_BIT) & 0x01) == PSU_POWER_GOOD_STATUS )
+            {
+                LedMode = LED_MODE_GREEN;
+            }
+            else
+            {
+                LedMode = LED_MODE_OFF;
+            }                                                        
+            break;                                                                                          
+                                                                                                            
         case LED_FAN_TRAY_1:
             rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_5, SWPLD_2_ADDR, LED_FAN_TRAY_REGISTER, &LedMode, 1);
-            LedMode = (LedMode >> 7 ) & 0x01;
+            LedMode = (LedMode >> LED_FAN_TRAY_1_BIT ) & 0x01;
             break;
 
         case LED_FAN_TRAY_2:
             rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_5, SWPLD_2_ADDR, LED_FAN_TRAY_REGISTER, &LedMode, 1);
-            LedMode = (LedMode >> 6) & 0x01;
+            LedMode = (LedMode >> LED_FAN_TRAY_2_BIT) & 0x01;
             break;              
         
         case LED_FAN_TRAY_3:
             rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_5, SWPLD_2_ADDR, LED_FAN_TRAY_REGISTER, &LedMode, 1);
-            LedMode = (LedMode >> 5) & 0x01;
+            LedMode = (LedMode >> LED_FAN_TRAY_3_BIT) & 0x01;
             break; 
             
         case LED_FAN_TRAY_4:
             rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_5, SWPLD_2_ADDR, LED_FAN_TRAY_REGISTER, &LedMode, 1);
-            LedMode = (LedMode >> 4) & 0x01;
+            LedMode = (LedMode >> LED_FAN_TRAY_4_BIT) & 0x01;
             break; 
             
         default:
@@ -265,27 +288,21 @@ int onlp_ledi_mode_set(onlp_oid_t id, onlp_led_mode_t mode)
     switch(local_id)
     {
         case LED_FAN:
-            LEDAddr = LED_FRONT_PANEL_REGISTER;
+            LEDAddr = LED_FAN_SYS_FRONT_REGISTER;
             rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_5, SWPLD_2_ADDR, LEDAddr, &OldLedMode, 1);
             NewLedMode = ( (OldLedMode & 0x3F) | ((driver_led_mode << 6) & 0xC0) );
             break;
         
         case LED_SYS:
-            LEDAddr = LED_FRONT_PANEL_REGISTER;
+            LEDAddr = LED_FAN_SYS_FRONT_REGISTER;
             rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_5, SWPLD_2_ADDR, LEDAddr, &OldLedMode, 1);
             NewLedMode = ( (OldLedMode & 0xCF) | ((driver_led_mode << 4) & 0x30) );
             break;
             
-        case LED_PSU2:
-            LEDAddr = LED_FRONT_PANEL_REGISTER;
-            rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_5, SWPLD_2_ADDR, LEDAddr, &OldLedMode, 1);
-            NewLedMode = ( (OldLedMode & 0xF3) | ((driver_led_mode << 2) & 0x0C) );
-            break;
-            
         case LED_PSU1:
-            LEDAddr = LED_FRONT_PANEL_REGISTER;
-            rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_5, SWPLD_2_ADDR, LEDAddr, &OldLedMode, 1);
-            NewLedMode = ( (OldLedMode & 0xFC) | (driver_led_mode & 0x03) );
+        case LED_PSU2:
+            AIM_LOG_ERROR("PSU LED (FRONT) is read only!!\n");
+            rv = ONLP_STATUS_E_UNSUPPORTED;
             break;
             
         case LED_FAN_TRAY_1:
@@ -311,7 +328,7 @@ int onlp_ledi_mode_set(onlp_oid_t id, onlp_led_mode_t mode)
             rv = ifnOS_LINUX_BmcI2CGet(I2C_BMC_BUS_5, SWPLD_2_ADDR, LEDAddr, &OldLedMode, 1);
             NewLedMode = ( (OldLedMode & 0xEF) | ((driver_led_mode << 4) & 0x01) );
             break;
-                    
+            
         default:
             rv = ONLP_STATUS_E_PARAM;
             AIM_LOG_ERROR("Invalid LED ID!!\n");

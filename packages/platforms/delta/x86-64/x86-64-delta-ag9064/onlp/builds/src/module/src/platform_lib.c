@@ -54,8 +54,7 @@ int ifnOS_LINUX_BmcI2CGet(uint8_t bus, uint8_t dev, uint32_t reg, uint32_t *rdat
         {            
             memset(tmp_data, 0x0, sizeof(tmp_data));
             
-            for(dIndex = 1; dIndex <= datalen; dIndex++)
-            {			
+            for(dIndex = 1; dIndex <= datalen; dIndex++) {
                 if(dIndex == 1)
                 {
                     pch = strtok(cmd_rdata," ");
@@ -168,7 +167,7 @@ int ifnOS_LINUX_BmcGetDataByName(char *devname, uint32_t *rdata)
     char ipmi_cmd [OS_MAX_MSG_SIZE] = {0};
     char cmd_rdata[OS_MAX_MSG_SIZE] = {0};
         
-    sprintf(ipmi_cmd, "ipmitool sdr | grep %s", devname);
+    sprintf(ipmi_cmd, "ipmitool sdr get %s | grep 'Sensor Reading'", devname);
     
     pFd = popen(ipmi_cmd, "r");
     
@@ -176,8 +175,9 @@ int ifnOS_LINUX_BmcGetDataByName(char *devname, uint32_t *rdata)
     {
         if (fgets(cmd_rdata, OS_MAX_MSG_SIZE, pFd) != NULL)
         {
-            temp_data = strchr(cmd_rdata, '|');
-        
+            temp_data = strchr(cmd_rdata, ':');
+            temp_data = strtok(temp_data, "(");
+            
             do 
             {
                 devdata += strtol(temp_data, &temp_data, 10); 
@@ -233,5 +233,5 @@ uint32_t xtoi(const char* str)
         str++;
     }
     
-    return x;	
+    return x;
 }
